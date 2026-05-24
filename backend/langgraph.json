@@ -1,0 +1,8 @@
+{
+  "python_version": "3.12",
+  "dependencies": ["./requirements.txt"],
+  "graphs": {
+    "medical_workflow": "./app/graph.py:medical_graph"
+  },
+  "env": ".env"
+}

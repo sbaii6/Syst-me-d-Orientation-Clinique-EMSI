@@ -1,0 +1,22 @@
+{
+  "scenarios": {
+    "syndrome_respiratoire": {
+      "description": "Orientation pour toux, fièvre légère ou encombrement nasal sans signe de gravité.",
+      "questions_recommandees": ["Depuis combien de jours toussez-vous ?", "Avez-vous des difficultés à respirer au repos ?", "Quelle est votre température exacte ?"],
+      "recommandation_intermediaire": "Repos, hydratation abondante, et prise de paracétamol si fièvre supérieure à 38.5°C."
+    },
+    "red_flags": {
+      "description": "Signes d'alerte cardiovasculaires ou respiratoires critiques nécessitant une prise en charge immédiate.",
+      "symptomes_critiques": ["Douleur thoracique intense", "Dyspnée sévère", "Perte de connaissance", "Hémoptysie"],
+      "recommandation_intermediaire": "Urgence médicale absolue. Veuillez contacter immédiatement les secours ou vous rendre au centre d'urgence le plus proche."
+    },
+    "cas_benin": {
+      "description": "Fatigue passagère, céphalée légère isolée ou poussée dentaire simple.",
+      "questions_recommandees": ["Ce mal de tête est-il habituel ?", "Avez-vous bien dormi ces derniers jours ?"],
+      "recommandation_intermediaire": "Surveillance à domicile, repos visuel et hydratation adéquate."
+    }
+  },
+  "mentions_legales": {
+    "clause_non_remplacement": "Ce système est un exercice académique et ne remplace pas une consultation médicale."
+  }
+}
