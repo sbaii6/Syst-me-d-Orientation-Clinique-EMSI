@@ -1,70 +1,495 @@
-# Getting Started with Create React App
+#  Système d'Orientation Clinique Intelligent (Multi-Agents)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Projet académique – École Marocaine des Sciences de l'Ingénieur (EMSI) – 4IIR**
 
-## Available Scripts
+**Encadrant :** Pr. Mohamed YOUSSFI  
+**Réalisé par :** Abderrahmane Sbaii
 
-In the project directory, you can run:
+---
 
-### `npm start`
+#  Présentation du Projet
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Ce projet consiste à développer une plateforme web intelligente d'orientation clinique préliminaire basée sur une architecture **Multi-Agents**.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Le système utilise **LangGraph** pour orchestrer plusieurs agents IA spécialisés afin de simuler un workflow médical sécurisé.
 
-### `npm test`
+L'objectif est de permettre :
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- La collecte des symptômes du patient.
+- L'analyse conversationnelle par un agent IA.
+- La génération d'une synthèse clinique préliminaire.
+- La validation obligatoire par un médecin.
+- La génération d'un rapport médical final.
 
-### `npm run build`
+ **Important :**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Ce projet est réalisé dans un cadre académique uniquement.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+L'intelligence artificielle ne fournit pas de diagnostic médical définitif.
+Toute recommandation doit être contrôlée et validée par un professionnel de santé.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+#  Objectifs
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Les objectifs principaux sont :
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Mettre en place une architecture Multi-Agents.
+- Comprendre l'orchestration avec LangGraph.
+- Utiliser un LLM dans un workflow contrôlé.
+- Implémenter un mécanisme Human-in-the-Loop.
+- Séparer les connaissances médicales grâce à MCP.
+- Générer automatiquement un rapport structuré.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#  Architecture du Système
 
-## Learn More
+Le système est basé sur un graphe d'état **LangGraph StateGraph**.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Le flux réel de l'application :
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```text
+                 Patient / Médecin
+                        │
+                        ▼
+                 Interface React
+                        │
+                        ▼
+                  FastAPI Backend
+                        │
+                        ▼
+                 MedicalState
+                        │
+                        ▼
+                ┌─────────────┐
+                │ Supervisor  │
+                └──────┬──────┘
+                       │
+                       ▼
+            ┌────────────────────┐
+            │ Diagnostic Agent   │
+            └────────┬───────────┘
+                     │
+                     ▼
+              Questions médicales
+                     │
+                     ▼
+              Synthèse clinique IA
+                     │
+                     ▼
+          ┌──────────────────────┐
+          │ Physician Review      │
+          │ Human-in-the-Loop    │
+          └──────────┬───────────┘
+                     │
+                     ▼
+             Validation médecin
+                     │
+                     ▼
+             ┌──────────────┐
+             │ Report Agent │
+             └──────┬───────┘
+                    │
+                    ▼
+             Rapport final PDF
 
-### Code Splitting
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+#  Agents IA
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 1. Supervisor Agent
 
-### Making a Progressive Web App
+Le Supervisor est le contrôleur principal du graphe.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Son rôle :
 
-### Advanced Configuration
+- Recevoir l'état courant.
+- Choisir l'agent suivant.
+- Contrôler les transitions.
+- Superviser l'exécution complète.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Il permet de gérer le workflow entre :
 
-### Deployment
+- Diagnostic Agent
+- Physician Review
+- Report Agent
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 2. Diagnostic Agent
+
+Fichier :
+
+```
+backend/app/nodes/diagnostic_agent.py
+```
+
+Cet agent utilise un modèle LLM (**Llama 3.3 via Groq API**).
+
+Fonctions :
+
+- Interagir avec le patient.
+- Collecter les symptômes.
+- Poser 5 questions ciblées.
+- Analyser les réponses.
+- Générer une synthèse clinique préliminaire.
+
+Exemples de recommandations :
+
+- Repos
+- Hydratation
+- Surveillance des symptômes
+
+
+⚠️ Aucun diagnostic médical automatique n'est produit.
+
+---
+
+## 3. Physician Review Agent
+
+Fichier :
+
+```
+backend/app/nodes/physician_review.py
+```
+
+Cette étape représente l'intervention humaine.
+
+Le workflow est interrompu grâce à LangGraph :
+
+```python
+interrupt_before=["physician_review"]
+```
+
+Le médecin peut :
+
+- Lire la synthèse IA.
+- Ajouter ses observations.
+- Modifier les recommandations.
+- Valider la décision finale.
+
+Cette étape garantit la sécurité du système.
+
+---
+
+## 4. Report Agent
+
+Fichier :
+
+```
+backend/app/nodes/report_agent.py
+```
+
+Responsable de la création du rapport final.
+
+Il récupère :
+
+- Messages du patient.
+- Réponses aux questions.
+- Synthèse IA.
+- Validation du médecin.
+
+Puis il génère un rapport structuré.
+
+---
+
+#  Gestion d'État LangGraph
+
+L'état global est défini dans :
+
+```
+backend/app/state.py
+```
+
+Exemple :
+
+```python
+class MedicalState(TypedDict):
+
+    messages: list
+
+    question_count: int
+
+    diagnostic_summary: str
+
+    interim_care: str
+
+    physician_treatment: str
+
+    final_report: str
+```
+
+Tous les agents utilisent cet état partagé.
+
+---
+
+#  MCP (Model Context Protocol)
+
+Le projet contient un serveur MCP :
+
+```
+mcp_server/
+```
+
+Le serveur permet de gérer les ressources médicales externes.
+
+Architecture :
+
+```text
+
+Diagnostic Agent
+
+       │
+
+       ▼
+
+    MCP Client
+
+       │
+
+       ▼
+
+    MCP Server
+
+       │
+
+       ▼
+
+ guidelines.json
+
+```
+
+Avantages :
+
+- Séparation des connaissances.
+- Maintenance facile.
+- Ajout de nouvelles directives sans modifier l'agent.
+
+---
+
+#  Technologies Utilisées
+
+## Backend
+
+- Python 3.11+
+- FastAPI
+- Uvicorn
+
+
+## Intelligence Artificielle
+
+- LangGraph
+- LangChain
+- Llama 3.3
+- Groq API
+
+
+## Frontend
+
+- React.js
+- JavaScript
+- HTML
+- CSS
+
+
+## Protocoles
+
+- MCP (Model Context Protocol)
+
+
+## Documents
+
+- Génération PDF
+
+---
+
+#  Structure du Projet
+
+```
+projet-clinique-ia/
+
+│
+├── backend/
+│
+│   ├── app/
+│   │
+│   │   ├── nodes/
+│   │   │
+│   │   ├── diagnostic_agent.py
+│   │   ├── physician_review.py
+│   │   ├── report_agent.py
+│   │   └── supervisor.py
+│   │   
+│   │   ├── tools/ 
+│   │   │
+│   │   ├──patient_tools.py
+│   │   ├── care_tools.py
+│   │   └──mcp_client.py 
+
+│   ├── langgraph.json
+│   ├── requirements.txt 
+│   ├── api.py
+│   │
+│── mcp_server/
+│             └─
+│──server.py 
+│
+│
+├── frontend/
+│
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│
+│
+└── README.md
+
+```
+
+---
+
+#  Installation
+
+## Prérequis
+
+Installer :
+
+- Python >= 3.11
+- Node.js >= 20
+- npm
+- Git
+
+
+---
+
+#  Backend
+
+Entrer dans le dossier :
+
+```bash
+cd backend
+```
+
+Créer l'environnement :
+
+```bash
+python -m venv .venv
+```
+
+Activer :
+
+Windows :
+
+```powershell
+.venv\Scripts\activate
+```
+
+Installer :
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# Configuration API
+
+Créer :
+
+```
+backend/.env
+```
+
+Ajouter :
+
+```env
+GROQ_API_KEY=your_key
+
+MODEL_NAME=llama-3.3-70b-versatile
+```
+
+---
+
+#  Lancement
+
+## Terminal 1 : Backend FastAPI
+
+```powershell
+cd backend
+
+.venv\Scripts\activate
+
+$env:PYTHONPATH="backend"; python -m uvicorn app.api:app --reload           
+```
+
+API :
+
+```
+http://localhost:8000
+```
+
+Swagger :
+
+```
+http://localhost:8000/docs
+```
+
+---
+
+## Terminal 2 : MCP Server
+
+```powershell
+cd backend
+
+backend\.venv\Scripts\activate
+npx @modelcontextprotocol/inspector python ../mcp_server/server.py
+
+---
+
+## Terminal 3 : Frontend
+
+```bash 
+cd frontend
+
+npm install
+
+npm start
+```
+
+Application :
+
+```
+http://localhost:3000
+```
+
+---
+
+#  Sécurité
+
+Le système applique :
+
+- Validation humaine obligatoire.
+- Pas de diagnostic automatique.
+- Pas de prescription automatique.
+- Contrôle médecin avant rapport final.
+
+---
+
+
+#  Auteur
+
+**Abderrahmane Sbaii**
+
+Étudiant Ingénierie Informatique et Réseaux (4IIR)
+
+École Marocaine des Sciences de l'Ingénieur (EMSI)
+
+---
+
+#  Licence
+
+Projet développé dans un cadre pédagogique et académique.
